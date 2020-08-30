@@ -1,0 +1,581 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html><head><title>Vital Signs Monitor</title>
+<meta http-equiv="imagetoolbar" content="no"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<link href="saVSMonitorStyle.css" rel="stylesheet" type="text/css"/>
+<script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+<script>
+const intstamp = Date.now();
+var bpSound;
+var lastPeerId = null;
+var peer   = null;
+var peerId = null;
+var conn   = null;
+
+var ecgn     =  false;
+var ecgSig   = 'nsr';
+var ecgSig2  = 'nsr';
+var ecgTrend = 0;
+
+var systol  = 120;
+var diastl  = 80;
+var systol2 = 0;
+var diastl2 = 0;
+var bpDelay = 0;
+var bpTrend = 0;
+
+var oximet  = 99;
+var oximet2 = 0;
+var oxDelay = 0;
+var oxTrend = 0;
+
+var heartr  = 64;
+var heartr2 = 0;
+var hrDelay = 0;
+var hrTrend = 0;
+
+var temper  = 36.9;
+var temper2 = 0;
+var tpDelay = 0;
+var tpTrend = 0;
+
+var respir  = 14;
+var respir2 = 0;
+var rrDelay = 0;
+var rrTrend = 0;
+
+var celsius = true;
+var poON    = false;
+var wrkg    = false;
+var notSent = true;
+var toggle  = true;
+var count   = 0;
+
+function initialize() {
+      peer = new Peer(null, { debug: 2 });
+          peer.on('open', function (id) {
+          if (peer.id === null) peer.id = lastPeerId;
+          else lastPeerId = peer.id;                 
+       });
+
+       peer.on('connection', function (c) {
+                 c.on('open', function() {
+                   c.send("Sender does not accept incoming connections");
+                   setTimeout(function() { c.close(); }, 500);
+                 });
+       });
+
+       peer.on('disconnected', function () {
+          isconnect.innerHTML = "Connection lost. Please reconnect";
+          peer.id = lastPeerId;
+          peer._lastServerId = lastPeerId;
+          peer.reconnect();
+       });
+
+      peer.on('close', function() {
+         conn = null;
+         isconnect.innerHTML = "Connection destroyed. Please refresh";
+      });
+      peer.on('error', function (err) { isconnect.innerHTML = '' + err;});
+}
+
+function conectToPeer(){
+  var peerid = prompt("Enter the peer ID\nyou have been given\nto connect with the server:");
+  if (peerid == null || peerid == "") {isconnect.innerHTML = "Nothing entered, try again";}
+  else {
+       var pid = peerid.trim();
+       isconnect.innerHTML = "connecting with " + pid;
+       if (conn) {conn.close();}
+       conn = peer.connect(pid, { reliable: true });
+       conn.on('open', function () {
+           isconnect.innerHTML = "Connected to: " + conn.peer;
+           var command = getUrlParam("command");
+           if (command) conn.send(command);
+           if (conn && conn.open) conn.send('clock=' + intstamp);
+       });
+       conn.on('data', function (data) { processVitals(data);});
+       conn.on('close', function () { isconnect.innerHTML = "Connection closed";});
+  }
+}
+
+function getUrlParam(name){
+   name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+   var regexS = "[\\?&]" + name + "=([^&#]*)";
+   var regex = new RegExp(regexS);
+   var results = regex.exec(window.location.href);
+      if (results == null) return null;
+      else return results[1];
+}
+
+function setECG(){
+     if (arguments.length == 1){
+        if (arguments[0] === true || arguments[0] === 'true') showECG();
+        else hideECG();
+        ecgSig   = 'nsr';
+        ecgSig2  = 'nsr';
+        ecgTrend = 0;
+     }
+     if (arguments.length == 2){
+        if (arguments[0] === true || arguments[0] === 'true') showECG();
+        else hideECG();
+        ecgSig   = arguments[1];
+        ecgSig2  = 'nsr';
+        ecgTrend = 0;
+     }
+     if (arguments.length == 4){
+         if (arguments[0] === true || arguments[0] === 'true') showECG();
+        else hideECG();
+        ecgSig   = arguments[1];
+        ecgSig2  = arguments[2];
+        ecgTrend = arguments[3];
+     }
+}
+
+function setBloodPressure(){
+     if (arguments.length == 2){
+          systol  = arguments[0];
+          diastl  = arguments[1];
+          systol2 = 0;
+          diastl2 = 0;
+          bpDelay = 0;
+          bpTrend = 0;
+     }
+     if (arguments.length == 6){
+          systol  = arguments[0];
+          diastl  = arguments[1];
+          systol2 = arguments[2];
+          diastl2 = arguments[3];
+          bpDelay = arguments[4];
+          bpTrend = arguments[5];
+     }        
+}
+
+function setTemperature(){
+     if (arguments.length == 2){
+          checkCF(  arguments[0]);
+          celsius = arguments[0];
+          temper  = arguments[1];
+          temper2 = 0;
+          tpDelay = 0;
+          tpTrend = 0;
+     }
+     if (arguments.length == 5){
+          checkCF(  arguments[0]);
+          celsius = arguments[0];
+          temper  = arguments[1];
+          temper2 = arguments[2];
+          tpDelay = arguments[3];
+          tpTrend = arguments[4];
+     }
+}
+
+function setRespirationRate(){
+     if (arguments.length == 1){
+          respir  = arguments[0];
+          respir2 = 0;
+          rrDelay = 0;
+          rrTrend = 0;
+     }
+     if (arguments.length == 4){
+          respir =  arguments[0];
+          respir2 = arguments[1];
+          rrDelay = arguments[2];
+          rrTrend = arguments[3];
+     }
+}
+
+function setHeartRate(){
+     if (arguments.length == 1){
+          heartr =  arguments[0]
+          heartr2 = 0;
+          hrDelay = 0;
+          hrTrend = 0;
+     }
+     if (arguments.length == 4){
+          heartr =  arguments[0];
+          heartr2 = arguments[1];
+          hrDelay = arguments[2];
+          hrTrend = arguments[3];
+     }        
+}
+
+function setPulseOximetry(){
+     if (arguments.length == 1){
+          oximet =  arguments[0];
+          oximet2 = 0;
+          oxDelay = 0;
+          oxTrend = 0;
+     }
+     if (arguments.length == 4){
+          oximet =  arguments[0];
+          oximet2 = arguments[1];
+          oxDelay = arguments[2];
+          oxTrend = arguments[3];
+     }        
+}
+
+function processVitals(dataString){
+    dataString = decodeURI(dataString);
+    if (dataString.charAt(0) == '?'){
+       dataString = dataString.substr(1);
+       var keyValPairs = dataString.split('&');
+       stepKeyValPairs(keyValPairs);
+     }
+}
+
+function stepKeyValPairs(kvparry){
+     var currTime = Date.now();
+     var keyvalue;
+  for (var idx = 0; idx < kvparry.length; idx++){
+          keyvalue = kvparry[idx].split('=');
+    switch(keyvalue[0]){
+    case 'ecgn':
+           if (keyvalue[1] === 'true' || keyvalue[1] === true) showECG();
+           else hideECG();
+         break;
+    case 'ecgs':
+           ecgSig   = keyvalue[1];
+         break;
+    case 'ecge':
+           ecgSig2  = keyvalue[1];
+         break;
+    case 'ecgt':
+           ecgTrend = (Number(keyvalue[1]) * 1000) + currTime;
+         break;
+    case 'syss':
+           systol   = Number(keyvalue[1]);
+         break;
+    case 'syse':
+           systol2  = Number(keyvalue[1]);
+         break;
+    case 'sysd':
+           bpDelay  = (Number(keyvalue[1]) * 1000) + currTime;
+         break;
+    case 'syst':
+           bpTrend  = (Number(keyvalue[1]) * 1000) + bpDelay;
+         break;
+    case 'dias':
+           diastl   = Number(keyvalue[1]);
+         break;
+    case 'diae':
+           diastl2  = Number(keyvalue[1]);
+         break;
+    case 'spos':
+           oximet   = Number(keyvalue[1]);
+           notSent  = true;
+         break;
+    case 'spoe':
+           oximet2  = Number(keyvalue[1]);
+         break;
+    case 'spod':
+           oxDelay  = (Number(keyvalue[1]) * 1000) + currTime;
+         break;
+    case 'spot':
+           oxTrend  = (Number(keyvalue[1]) * 1000) + oxDelay;
+         break;
+    case 'plss':
+           heartr   = Number(keyvalue[1]);
+           notSent  = true;
+         break;
+    case 'plse':
+           heartr2  = Number(keyvalue[1]);
+         break;
+    case 'plsd':
+           hrDelay  = (Number(keyvalue[1]) * 1000) + currTime;
+         break;
+    case 'plst':
+           hrTrend  = (Number(keyvalue[1]) * 1000) + hrDelay;
+         break;
+    case 'tmps':
+           temper   = Number(keyvalue[1]);
+         break;
+    case 'tmpe':
+           temper2  = Number(keyvalue[1]);
+         break;
+    case 'tmpd':
+           tpDelay  = (Number(keyvalue[1]) * 1000) + currTime;
+         break;
+    case 'tmpt':
+           tpTrend  = (Number(keyvalue[1]) * 1000) + tpDelay;
+         break;
+    case 'cels':
+           checkCF(keyvalue[1]);
+         break;
+    case 'rsps':
+           respir   = Number(keyvalue[1]);
+         break;
+    case 'rspe':
+           respir2  = Number(keyvalue[1]);
+         break;
+    case 'rspd':
+           rrDelay  = (Number(keyvalue[1]) * 1000) + currTime;
+         break;
+    case 'rspt':
+           rrTrend  = (Number(keyvalue[1]) * 1000) + rrDelay;
+         break;
+    }
+  }
+}
+
+function currentValue(svalue, evalue, delay, trend){
+       var ctime = Date.now();
+       var cvalue;
+       if (ctime > delay && ctime < trend)
+          cvalue =((ctime - delay)/(trend - delay) * (evalue - svalue)) + svalue;
+       else if (ctime > trend && delay < trend) cvalue = evalue;
+            else cvalue = svalue;
+       return cvalue;
+}
+
+function checkCF(boolCF){
+    if (boolCF === true || boolCF === 'true'){
+         if (!celsius) tempCF.innerHTML = "&#8259;&#8259;&#8259;.&#8259";
+               celsius = true;
+               cf.innerHTML = "&deg;C";
+    }
+    else {
+         if (celsius) tempCF.innerHTML = "&#8259;&#8259;&#8259;.&#8259";
+               celsius = false;
+               cf.innerHTML = "&deg;F";
+    }
+}
+
+function hideECG(){
+        var elem = document.getElementById('divECG');
+            elem.style.display = 'none';
+            elem = document.getElementById('buttonECG');
+            elem.style.display = 'none';
+            ecgn = false;
+}
+
+function showECG(){
+        var elem = document.getElementById('divECG');
+            elem.style.display = 'flex';
+            elem = document.getElementById('buttonECG');
+            elem.style.display = 'inline-block';
+            ecgn = true;
+}
+
+function runECG(){
+        // code for ECG runs from here
+        if (conn && conn.open) conn.send('ECG started: ' + ecgSig);
+}
+
+function dispBP(target1, target2, target3){
+     var sysT = Math.round(currentValue(systol, systol2, bpDelay, bpTrend));
+     var diaS = Math.round(currentValue(diastl, diastl2, bpDelay, bpTrend));
+     var timeInt = 533;
+     var infMSec = 6000;
+     if(diaS >= sysT && !wrkg){
+      target1.innerHTML = 'Err';
+      target2.innerHTML = 'Err';
+      target3.innerHTML = 'Err';
+     }
+     else if(!wrkg) {
+      wrkg = true;
+      var upper = sysT + 10;
+      var lower = diaS - 10;
+      target1.innerHTML = "&#8259;&#8259;&#8259;&#8259;&#8201;&#8725;";
+      target2.innerHTML = "&#8202;&#8259;&#8259;&#8259;&#8259;";
+      target3.innerHTML = "&#8259;&#8259;&#8259;&#8259;"
+      var infCount = 0;
+      var infPress = 0;
+      var cycles = infMSec / timeInt;
+      var infCycleP = Math.floor(upper / cycles);
+      cycles = cycles + 2;
+      playSound(bpSound);
+      var x = setInterval(function() {
+         if (cycles > infCount++) {
+             if (infPress < 100) target1.innerHTML = "&#8196;" + infPress + "&#8201;&#8725;";
+             else target1.innerHTML = infPress + "&#8201;&#8725;";
+             if (infPress < upper) infPress = infPress + infCycleP;  
+         }
+         else {
+            if (upper > lower) {
+              if (upper < 100) target1.innerHTML = "&#8196;" + upper + "&#8201;&#8725;";
+              else target1.innerHTML = upper + "&#8201;&#8725;";
+              upper = upper - Math.floor(Math.random() * 4);
+            }
+            else {         
+              if (sysT < 100) target1.innerHTML = "&#8196;" + sysT + "&#8201;&#8725;";
+              else target1.innerHTML = sysT + "&#8201;&#8725;";
+              target2.innerHTML = "&#8202;" + diaS;
+              wrkg = false;
+              var mean = Math.floor(((2 * diaS) + sysT) / 3);
+              target3.innerHTML = mean;
+              if (conn && conn.open) conn.send('Blood pressure taken ' + sysT + ' / ' + diaS + ' MAP ( ' + mean + ' )');
+              clearInterval(x);
+            }
+         }
+      }, timeInt);
+     }
+}
+
+function dispPO(target1, target2){
+  var poX = Math.round(currentValue(oximet, oximet2, oxDelay, oxTrend));
+      if (poX > 100) poX = 100;
+  var htR = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
+  if (!toggle) toggle = true;
+  else toggle = false;
+  if (!poON){
+  poON = true;
+  target1.innerHTML = "&#8259;&#8259;&#8259;&#8259;";
+  target2.innerHTML = "&#8194;&#8194;&#8194;&#8194;";
+  var pulse = Math.floor(8572/htR);
+  var inter = Math.floor(htR * 7 / 5);
+  var n = setInterval(function() {
+        if (inter > 0){
+          if (inter % 7 == 0){
+             target1.innerHTML = "&#8259;&#8194;&#8194;&#8194;";
+             target2.innerHTML = "&#8259;&#8194;&#8194;&#8194;";
+           }
+          if (inter % 7 == 1){
+             target1.innerHTML = "&#8259;&#8259;&#8194;&#8194;";
+             target2.innerHTML = "&#8259;&#8259;&#8194;&#8194;";
+          }
+          if (inter % 7 == 2){
+             target1.innerHTML = "&#8259;&#8259;&#8259;&#8194;";
+             target2.innerHTML = "&#8259;&#8259;&#8259;&#8194;";
+          }
+          if (inter % 7 == 3){
+             target1.innerHTML = "&#8259;&#8259;&#8259;&#8259;";
+             target2.innerHTML = "&#8259;&#8259;&#8259;&#8259;";
+          }
+          if (inter % 7 == 4){
+             target1.innerHTML = "&#8259;&#8259;&#8259;&#8194;";
+             target2.innerHTML = "&#8259;&#8259;&#8259;&#8194;";
+          }
+          if (inter % 7 == 5){
+             target1.innerHTML = "&#8259;&#8259;&#8194;&#8194;";
+             target2.innerHTML = "&#8259;&#8259;&#8194;&#8194;";
+          }
+          if (inter % 7 == 6){
+             target1.innerHTML = "&#8259;&#8194;&#8194;&#8194;";
+             target2.innerHTML = "&#8259;&#8194;&#8194;&#8194;";
+          }
+          inter--;
+        }
+        else{
+          target1.innerHTML = poX;
+          target2.innerHTML = htR;
+          if (notSent){
+                if (conn && conn.open) conn.send('Pulse oximeter probe SPO2: '
+                                  + poX + '%  Pulse: ' + htR);
+                notSent = false;
+          }
+          if (count++ > htR){
+              poX = currentValue(oximet, oximet2, oxDelay, oxTrend);
+              if (poX < 80) poX = Math.round(poX + (Math.random() * 4.00) - 1.99);
+              else poX = Math.round(poX + (Math.random() * 2.00) - 0.99);
+              if (poX > 100) poX = 100;
+              count = 0;
+          }
+          htR = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
+        }
+        if (toggle){
+           clearInterval(n);
+           poON = false;
+           notSent = true;
+           if (conn && conn.open) conn.send('Pulse oximeter probe removed');
+           target1.innerHTML = "&#8259;&#8259;&#8259;&#8259;";
+           target2.innerHTML = "&#8259;&#8259;&#8259;&#8259;";
+        }
+    }, pulse);
+  }
+}
+
+function dispTC(target){
+   tmP = currentValue(temper, temper2, tpDelay, tpTrend);
+   if (celsius){
+     cf.innerHTML = "&deg;C";
+     if (tmP < 20.0 || tmP > 42.0){
+        target.innerHTML = "Err";
+        if (conn && conn.open) conn.send('Temperature out-of-range: ' + 'Err ' + tmP.toFixed(1) + '&deg;C');
+     }
+     else{
+        target.innerHTML = tmP.toFixed(1);
+        if (conn && conn.open) conn.send('Temperature taken: ' + tmP.toFixed(1) + '&deg;C');
+     }
+   }
+   else {
+     cf.innerHTML = "&deg;F";
+     if (tmP < 68.0 || tmP > 107.0){
+        target.innerHTML = "Err";
+        if (conn && conn.open) conn.send('Temperature out-of-range: ' + 'Err ' + tmP.toFixed(1) + '&deg;F');
+     }
+     else{
+        target.innerHTML = tmP.toFixed(1);
+        if (conn && conn.open) conn.send('Temperature taken: ' + tmP.toFixed(1) + '&deg;F');
+     }
+   }
+}
+          
+function dispRR(target){
+   rsP = Math.round(currentValue(respir, respir2, rrDelay, rrTrend));
+   target.innerHTML = rsP;
+   if (conn && conn.open) conn.send('Respiration rate taken: ' + rsP);
+}
+
+function loadSound(url){
+       var audio = document.createElement('audio');
+       audio.style.display = "none";
+       audio.src = url;
+       audio.loop = false;
+       document.body.appendChild(audio);
+       return audio;
+}
+
+function playSound(audio){
+        audio.play();
+        current_audio = audio;
+}
+</script>
+</head><body onload="
+   bpSound = loadSound('./Sounds/pump.mp3');
+   initialize();
+   // use the functions below to set initial conditions
+   setECG(false);
+   setBloodPressure(120, 80);
+   setTemperature(true, 37.0);
+   setRespirationRate(16);
+   setPulseOximetry(99);
+   setHeartRate(72);">
+<div class="general">
+<div class="butspacer"><span id="isconnect" class="isconnect">not connected</span>
+<button class="link" onclick="conectToPeer();">&#128279;</button></div>
+<h1 class="vs">Vital Signs Monitor</h1>
+<div class="row">
+<div id="divECG" class="ebox">ECG&#8201;<canvas id="ecgSig" class="ecg"></canvas></div>
+</div>
+<div class="row">
+<div class="ebox">NIBP&#8201;
+<span id="sys" class="sys">&#8259;&#8259;&#8259;&#8259;&#8201;&#8725;</span>
+<span id="dia" class="dia">&#8202;&#8259;&#8259;&#8259;&#8259;</span>MAP(
+<span id="map" class="map">&#8259;&#8259;&#8259;&#8259;</span>)</div>
+</div>
+<div class="row">
+<div class="sbox">SpO&#8322; <span id="spo" class="spo">&#8259;&#8259;&#8259;&#8259;</span> %</div>
+<div class="sbox">Pulse <span id="pul" class="spo">&#8259;&#8259;&#8259;&#8259;</span></div>
+</div>
+<div class="row">
+<div class="sbox">RR <span id ="res" class="res">&#8259;&#8259;&#8259;&#8259;</span></div>
+<div class="sbox">T <span id="tempCF" class="tempCF">&#8259;&#8259;&#8259;.&#8259;</span><span id="cf">&deg;C</span></div>
+</div>
+<div class="bbarvs">
+<button id="buttonECG" class="vms" onclick="runECG();">ECG</button>
+<button class="vms" onclick="dispBP(sys, dia, map);">Blood Pressure</button>
+<button class="vms" onclick="dispPO(spo, pul);">Pulse Oximetry</button>
+<button class="vms" onclick="dispRR(res);">Respiration Rate</button>
+<button class="vms" onclick="dispTC(tempCF);">Temperature</button>
+</div>
+<p class="copyrightprivacy"><a href="http://www.barrymrobinson.ca/" target="_blank" class="crpy">Copyright &copy;
+<script type="text/javascript">
+today = new Date();
+year = today.getYear();
+if (year < 2000) year = year + 1900;
+document.write(year);
+</script>
+by Barry Robinson, Toronto, Ontario Canada</a></p>
+</div>
+</body></html>

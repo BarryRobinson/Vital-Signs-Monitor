@@ -1,0 +1,413 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html><head><title>Vitals Monitor Control Window</title>
+<meta http-equiv="imagetoolbar" content="no"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<link href="saVSControlStyle.css" rel="stylesheet" type="text/css"/>
+<script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+<script>
+var intstamp = Date.now();
+var lastPeerId = null;
+var peer = null;
+var peerId = null;
+var conn = null;
+var cels = true;
+var ecgn = false;
+var allChecked = false;
+var chboxes = ['ecg', 'sys', 'spo', 'pls', 'tmp', 'rsp'];
+
+function initialize() {
+       peer = new Peer(null, { debug: 2 });
+       peer.on('open', function (id) {
+           if (peer.id === null) peer.id = lastPeerId;
+           else lastPeerId = peer.id;
+           update('<br/>\n<strong>Your ID: ' + peer.id + '</strong><br/>\n<br/>\n');
+           isconnect.innerHTML = "Awaiting connection...";
+       });
+
+       peer.on('connection', function (c) {
+           if (conn && conn.open) {
+              c.on('open', function() {
+                c.send("Already connected to another client");
+                setTimeout(function() { c.close(); }, 500);
+              });
+              return;
+           }
+           conn = c;
+           isconnect.innerHTML = "Connected to Vitals Monitor";
+           ready();
+       });
+
+       peer.on('disconnected', function () {
+          isconnect.innerHTML = "Connection lost. Please reconnect";
+          peer.id = lastPeerId;
+          peer._lastServerId = lastPeerId;
+          peer.reconnect();
+       });
+
+      peer.on('close', function() {
+         conn = null;
+         isconnect.innerHTML = "Connection destroyed. Please refresh";
+      });
+      peer.on('error', function (err) { isconnect.innerHTML = '' + err;});
+}
+
+function ready() {
+      conn.on('data', function (data) {
+        if (data.startsWith('clock')){
+          intstamp = Date.now();
+          let dnow = new Date(intstamp);
+          update("<i>. . . Remote vital signs monitor opened on " + dnow.toDateString() +
+               " at " + dnow.toTimeString() + " synchronized</i><br/>\n");
+        }
+        else update("<i> . . . at " + timeStamp() + " " + data + " . . .</i><br/>\n");
+      });
+      conn.on('close', function () {
+         status.innerHTML = "Connection reset<br>Awaiting connection...";
+         conn = null;
+      });
+}
+         
+function controlWindowOpened(){
+   if (intstamp > 0){
+      let dnow = new Date(intstamp);
+      update(". . . Control window opened on " + dnow.toDateString() +
+             " at " + dnow.toTimeString() + "<br/>\n");
+   }
+}
+
+function getSelectedOption(opid) {
+    var sel = document.getElementById(opid);
+    for (var i = 0; i < sel.options.length; i++)
+      if(sel.options[i].selected == true) return sel.options[i].value;
+}
+
+function transmitVariables(){
+ var transV = new String('?');
+ var setS   = new String();
+ var firstE = true;
+ for (var idx = 0; idx < chboxes.length; idx++){
+   if (document.getElementById(chboxes[idx]).checked){
+        if (firstE) firstE = false;
+           else transV += '&';
+        switch(chboxes[idx]){
+        case 'ecg':
+           transV += 'ecgn=' + ecgn + '&' + 'ecgs=' + getSelectedOption('ecgs') + '&' +
+                     'ecge=' + getSelectedOption('ecge') + '&' + 'ecgt=' + ecgt.value;
+           var ecgState = 'Disabled';
+           if (ecgn) ecgState = 'Enabled';
+           if (ecgt.value > 0) setS += '&#8194;ECG: ' + ecgState + ' start with ' + getSelectedOption('ecgs') + ', end with ' +
+                               getSelectedOption('ecge') + ', at ' + ecgt.value + ' seconds<br/>\n';
+           else setS += '&#8194;ECG: ' + ecgState + " " + getSelectedOption('ecgs') + '<br/>\n';
+           break;
+        case 'sys':
+           transV += 'syss=' + syss.value + '&' + 'syse=' + syse.value + '&' +
+                     'sysd=' + sysd.value + '&' + 'syst=' + syst.value + '&' +
+                     'dias=' + dias.value + '&' + 'diae=' + diae.value;
+           if (syst.value > 0) setS += '&#8194;NIBP: from ' + syss.value + '/' + dias.value + ' to ' +
+                      syse.value + '/' + diae.value + ', delay by ' +
+                      sysd.value + ' seconds, trend over ' + syst.value + ' seconds<br/>\n';
+           else setS += '&#8194;NIBP: ' + syss.value + '/' + dias.value + '<br/>\n';
+           break;
+        case 'spo':
+           transV += 'spos=' + spos.value + '&' + 'spoe=' + spoe.value + '&' +
+                     'spod=' + spod.value + '&' + 'spot=' + spot.value;
+           if (spot.value > 0) setS += '&#8194;SPO2: from ' + spos.value + '% to ' + spoe.value + '%, delay by ' +
+                               spod.value + ' seconds, trend over ' + spot.value + ' seconds<br/>\n';
+           else setS += '&#8194;SPO2: ' + spos.value + '%<br/>\n';
+           break;
+        case 'pls':
+           transV += 'plss=' + plss.value + '&' + 'plse=' + plse.value + '&' +
+                     'plsd=' + plsd.value + '&' + 'plst=' + plst.value;
+           if (plst.value > 0) setS += '&#8194;Pulse: from ' + plss.value + ' to ' + plse.value + ', delay by ' +
+                      plsd.value + ' seconds, trend over ' + plst.value + ' seconds<br/>\n';
+           else setS += '&#8194;Pulse: ' + plss.value + '<br/>\n';
+           break;
+        case 'tmp':
+           var unt = '&deg;C';
+           if (!cels) unt = '&deg;F';
+           transV += 'tmps=' + tmps.value + '&' + 'tmpe=' + tmpe.value + '&' +
+                     'tmpd=' + tmpd.value + '&' + 'tmpt=' + tmpt.value + '&' + 'cels=' + cels;
+           if (tmpt.value > 0) setS += '&#8194;Temp: from ' + tmps.value + unt + ' to ' + tmpe.value + unt + ', delay by ' +
+                      tmpd.value + ' seconds, trend over ' + tmpt.value + ' seconds<br/>\n';
+           else setS += '&#8194;Temp: ' + tmps.value + unt + '<br/>\n';
+           break;
+        case 'rsp':
+           transV += 'rsps=' + rsps.value + '&' + 'rspe=' + rspe.value + '&' +
+                     'rspd=' + rspd.value + '&' + 'rspt=' + rspt.value;
+           if (rspt.value > 0) setS += '&#8194;Resp: from ' + rsps.value + ' to ' + rspe.value + ', delay by ' +
+                      rspd.value + ' seconds, trend over ' + rspt.value + ' seconds<br/>\n';
+           else setS += '&#8194;Resp: ' + rsps.value  + '<br/>\n';
+           break;
+        }
+   }
+ }
+  if (transV.length > 6){
+     update('Update vitals at ' + timeStamp() + ' . . .<br/>\n' + setS + '. . . end vitals update<br/>\n');
+     transV = encodeURI(transV);
+     if (conn && conn.open) conn.send(transV);
+  }
+}
+
+function comment(text){
+      update("Comment: at " + timeStamp() + " " + text + "<br/>\n");
+}
+
+function timeStamp(){
+   var tmp = 0;
+     if (intstamp > 0){
+         var scs = Math.floor((Date.now() - intstamp)/1000);
+         var mns = Math.floor(scs/60);
+         scs = scs % 60;
+         tmp =  ((mns < 10) ? '0' : '') + mns;
+         tmp += ((scs < 10) ? ':0' : ':') + scs;
+     }
+   return tmp;
+}
+
+function update(text){
+	var chatLog = responseHolder.innerHTML;
+	responseHolder.innerHTML = chatLog + text;
+        scrollDiv = document.getElementById("responseHolder");
+	scrollDiv.scrollTop = scrollDiv.scrollHeight;
+}
+
+function openAttachment() {
+  document.getElementById('attachment').click();
+}
+
+function fileSelected(input){
+  if (!input) return;
+  var reader = new FileReader();
+  reader.onload = function(evt) {
+    processLoadText(evt.target.result, input.files[0].name);
+  };
+        reader.readAsText(input.files[0]);
+}
+
+function processLoadText(text, fname){
+   text = text.replace(/[\n\r]/g, "");
+   text.trim();
+   var inarray = text.split('?');
+    if (inarray.length != 2){
+      update("Error loading: " + fname + " wrong number of \'?\' in file.<br/>\n");
+      return;
+    }
+   var vparams = inarray[1].split('&');
+   var ii = 0;
+   var indx = 0;
+   while (indx < chboxes.length) document.getElementById(chboxes[indx++]).checked = false;
+   for (ii = 0; ii < vparams.length; ii++){
+        var kvpair = vparams[ii].split('=');
+        switch(kvpair[0]){
+          case 'ecgn':
+
+          break;   
+          case 'ecgs':
+                ecgs.value = kvpair[1];
+                document.getElementById('ecg').checked = true;
+          break;
+          case 'egce':
+                egce.value = kvpair[1];
+          break;
+          case 'egct':
+                egct.value = Number(kvpair[1]);
+          break;
+          case 'syss':
+                syss.value = Number(kvpair[1]);
+                document.getElementById('sys').checked = true;
+          break;
+          case 'syse':
+                syse.value = Number(kvpair[1]);
+          break;
+          case 'sysd':
+                sysd.value = Number(kvpair[1]);
+                diad.value = sysd.value;
+          break;
+          case 'syst':
+                syst.value = Number(kvpair[1]);
+                diat.value = syst.value;
+          break;
+          case 'dias':
+                dias.value = Number(kvpair[1]);
+          break;
+          case 'diae':
+                diae.value = Number(kvpair[1]);
+          break;
+          case 'spos':
+                spos.value = Number(kvpair[1]);
+                document.getElementById('spo').checked = true;
+          break;
+          case 'spoe':
+                spoe.value = Number(kvpair[1]);
+          break;
+          case 'spod':
+                spod.value = Number(kvpair[1]);
+          break;
+          case 'spot':
+                spot.value = Number(kvpair[1]);
+          break;
+          case 'plss':
+                plss.value = Number(kvpair[1]);
+                document.getElementById('pls').checked = true;
+          break;
+          case 'plse':
+                plse.value = Number(kvpair[1]);
+          break;
+          case 'plsd':
+                plsd.value = Number(kvpair[1]);
+          break;
+          case 'plst':
+                plst.value = Number(kvpair[1]);
+          break;
+          case 'tmps':
+                tmps.value = Number(kvpair[1]);
+                document.getElementById('tmp').checked = true;
+          break;
+          case 'tmpe':
+                tmpe.value = Number(kvpair[1]);
+          break;
+          case 'tmpd':
+                tmpd.value = Number(kvpair[1]);
+          break;
+          case 'tmpt':
+                tmpt.value = Number(kvpair[1]);
+          break;
+          case 'cels':
+                if (kvpair[1] === true || kvpair[1] === 'true') cels.value = true;
+                else cels.value = false;
+          break;
+          case 'rsps':
+                rsps.value = Number(kvpair[1]);
+                document.getElementById('rsp').checked = true;
+          break;
+          case 'rspe':
+                rspe.value = Number(kvpair[1]);
+          break;
+          case 'rspd':
+                rspd.value = Number(kvpair[1]);
+          break;
+          case 'rspt':
+                rspt.value = Number(kvpair[1]);
+          break;
+          default:
+             update("Error in file " + fname + " at: " + kvpair[0] + "=" + kvpair[1] + "<br/>\n");
+          break;
+        }
+   }
+   update(timeStamp() + " Successfully loaded: \"" + inarray[0] +  "\"<br/>\n");
+}
+
+function toggleECG(){
+ if (!ecgn){
+    document.getElementById('ecgn').innerHTML = "&#8195;ECG enabled";
+    ecgn = true;
+ }
+ else {
+    document.getElementById('ecgn').innerHTML = "&#8195;ECG disabled";
+    ecgn = false;
+ }
+}
+
+function toggleCF(){
+ if (cels){
+    document.getElementById('labCF').innerHTML = "&#8195;Temperature &deg;F";
+    cels = false;
+ }
+ else {
+    document.getElementById('labCF').innerHTML = "&#8195;Temperature &deg;C";
+    cels = true;
+ }
+}
+
+function toggleCheckbox(){
+     var indx = 0;
+  if (allChecked){
+     while (indx < chboxes.length) document.getElementById(chboxes[indx++]).checked = false;
+     allChecked = false;
+  }
+  else {
+     while (indx < chboxes.length) document.getElementById(chboxes[indx++]).checked = true;
+     allChecked = true;
+  }
+}
+</script>
+</head><body onload="controlWindowOpened();
+                     initialize();">
+<div class="controlWindow">
+<div class="butspacer"><span id="isconnect" class="isconnect">not connected</span>&#8195;&#128279;</div>
+<div class="titlerow"><h1 class="vs">Vital Signs Monitor Control Window</h1></div>
+<div id="responseHolder" class="responseHolder"></div>
+<div class="titlerow"><button name="addcomment" id="addcomment" class="sac" onClick="comment(acommnt.value);">Add comment</button>
+<input type="text" name="acomment" class="comment" id="acommnt" size="50"/></div>
+<div class="labrow"><p id="lwidth">Select</p><p style="width: 7em; margin: 4px;">Start</p> <p style="width: 4em; margin: 4px;">End</p><p style="width: 4em; margin: 4px;">Trend</p></div>
+<div class="trow1"><div class="crow">&#8194;<input type="checkbox" id="ecg" class="chkb"><label id="ecgn" for="ecg">&#8195;ECG disabled</label></div>
+<select id="ecgs" name="ecgs" class="ecg">
+<option value="NSR" selected>NSR</option>
+<option value="VTach">VTach (pulseless)</option>
+<option value="VFib">VFib</option>
+<option value="Asystole">Asystole</option>
+<option value="AFib">AFib</option>
+</select>
+<select id="ecge" name="ecge" class="ecg">
+<option value="NSR" selected>NSR</option>
+<option value="VTach">VTach (pulseless)</option>
+<option value="VFib">VFib</option>
+<option value="Asystole">Asystole</option>
+<option value="AFib">AFib</option>
+</select>
+<input id="ecgt" type="number" class="in4" step="1" min="0" value="0">
+</div><div class="labrow"><p id="lwidth">Select</p><p style="width: 4em; margin: 4px;">Start</p> <p style="width: 3em; margin: 4px;">End</p><p style="width: 4em; margin: 4px;">Delay</p><p style="width: 4em; margin: 4px;">Trend</p></div>
+<div class="trow2"><div class="crow"><input type="checkbox" id="sys" class="chkb"><label for="sys">&#8195;Systolic</label></div>
+<input id="syss" type="number" class="in3" step="1" min="0" max="300" value="120">
+<input id="syse" type="number" class="in3" step="1" min="0" max="300" value="0">
+<input id="sysd" type="number" class="in4" step="1" min="0" value="0" onchange="diad.value = sysd.value;">
+<input id="syst" type="number" class="in4" step="1" min="0" value="0" onchange="diat.value = syst.value;">
+</div><div class="trow2">
+<div class="crow">&#8195;&#8195;Diastolic</div>
+<input id="dias" type="number" class="in3" step="1" min="0" max="200" value="80">
+<input id="diae" type="number" class="in3" step="1" min="0" max="200" value="0">
+<input id="diad" type="text"   class="in4" value="0"  readonly>
+<input id="diat" type="text"   class="in4" value="0"  readonly>
+</div><div class="trow3">
+<div class="crow"><input type="checkbox" id="spo" class="chkb"><label for="spo">&#8195;SPO2</label></div>
+<input id="spos" type="number" class="in3" step="1" min="0" max="100" value="99">
+<input id="spoe" type="number" class="in3" step="1" min="0" max="100" value="0">
+<input id="spod" type="number" class="in4" step="1" min="0" value="0">
+<input id="spot" type="number" class="in4" step="1" min="0" value="0">
+</div><div class="trow3">
+<div class="crow"><input type="checkbox" id="pls" class="chkb"><label for="pls">&#8195;Pulse</label></div>
+<input id="plss" type="number" class="in3" step="1" min="0" max="200" value="72">
+<input id="plse" type="number" class="in3" step="1" min="0" max="200" value="0">
+<input id="plsd" type="number" class="in4" step="1" min="0" value="0">
+<input id="plst" type="number" class="in4" step="1" min="0" value="0">
+</div><div class="trow4">
+<div class="crow"><input type="checkbox" id="tmp" class="chkb"><label id="labCF" for="tmp">&#8195;Temperature &deg;C</label></div>
+<input id="tmps" type="number" class="in3" step="0.1" min="30.0" max="110.0" value="37.0">
+<input id="tmpe" type="number" class="in3" step="0.1" min="30.0" max="110.0" value="0">
+<input id="tmpd" type="number" class="in4" step="1"   min="0"    value="0">
+<input id="tmpt" type="number" class="in4" step="1"   min="0"    value="0">
+</div><div class="trow5">
+<div class="crow"><input type="checkbox" id="rsp" class="chkb"><label for="rsp">&#8195;Respiration</label></div>
+<input id="rsps" type="number" class="in3" step="1" min="0" max="100" value="12">
+<input id="rspe" type="number" class="in3" step="1" min="0" max="100" value="0">
+<input id="rspd" type="number" class="in4" step="1" min="0" value="0">
+<input id="rspt" type="number" class="in4" step="1" min="0" value="0">
+</div><div class="buttrow">
+<input  type="file"  id="attachment" style="display: none;" onchange="fileSelected(this);"/>
+<button name="LFile" id="btnAttachment" class="sac" onclick="openAttachment();" value="File">Load</button>
+<button name="VUpdt" id="update" class="sac" onClick="transmitVariables();">Update</button>
+<button name="VSDel" id="selectDeselect" class="sac" onClick="toggleCheckbox();">Select/Deselect All</button>
+<button name="CFTog" id="toggleCF" class="sac" onClick="toggleCF();">Toggle C/F</button>
+<button name="ECGTg" id="toggleECG" class="sac" onClick="toggleECG();">Toggle ECG</button>
+</div><!-- Copyright line -->
+<p class="copyrightprivacy"><a href="http://www.barrymrobinson.ca/" target="_blank" class="crpy">Copyright &copy;
+<script type="text/javascript"><!--
+today = new Date();
+year = today.getYear();
+if (year < 2000) year = year + 1900;
+document.write(year);
+//--></script>
+by Barry Robinson, Toronto, Ontario Canada</a></p>
+</div>
+</body></html>

@@ -1,0 +1,239 @@
+div.general{
+    width: 34em;
+    height: auto;
+    padding: 0.25em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1b2631;
+}
+
+div.butspacer{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+span.isconnect{
+    width: auto;
+    height: auto;
+    font-family: system-ui-monospaced, ui-monospace, arial;
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-right: 0.5em;
+    text-align: right;     
+    color: grey;
+}
+
+button.link{
+    height: auto;
+    width: auto;
+    border: none;
+    cursor: pointer;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 2.0em;
+    font-weight: bold;
+    color: grey;
+    background-color: #1b2631;
+    text-decoration: none;
+    text-shadow: none;
+}
+
+button.link:hover {
+    color: #1b2631;
+}
+
+button.link:active {
+    color: green;
+}
+
+h1.vs{
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 2.0em;
+    font-weight: bold;        
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+    text-align: center;
+    color: #F7F2E0;
+}
+
+div.row{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+div.ebox{
+    width: 95%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0.25em;
+    margin: 2px;
+    border:2px solid #2d4052;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 1.0em;
+    font-weight: bold;
+    text-align: left;	
+    color: #F7F2E0;
+    background-color: #1b2631;
+}
+
+canvas.ecg{
+    width: 100%;
+    height: 6em;
+    background-color: #1b2631;
+}
+
+span.sys{
+    width: 45%;
+    height: auto;
+    font-family: arial, helvetica;
+    font-size: 4.5em;
+    font-weight: bold;
+    margin-left: 0;
+    text-align: right;
+    color: red;
+}
+
+span.dia{
+    width: 45%;
+    height: auto;
+    font-family: arial, helvetica;
+    font-size: 4.5em;
+    font-weight: bold;
+    margin-left: 0.1em;
+    text-align: left;   
+    color: red;
+}
+
+span.map{
+    width: 1.5em;
+    height: auto;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 1.0em;
+    font-weight: bold;        
+    text-align: left;
+    color:red;
+}
+div.sbox{
+    width: 46%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0.25em;
+    margin: 2px;
+    border:2px solid #2d4052;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 1.0em;
+    font-weight: bold;        
+    text-align: left;
+    color: #F7F2E0;
+    background-color: #1b2631;
+}
+
+span.spo{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    font-family: arial, helvetica;
+    font-size: 4.5em;
+    font-weight: bold;
+    margin-left: 0.25em;
+    text-align: left;     
+    color: yellow;
+}
+
+span.res{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    font-family: arial, helvetica;
+    font-size: 4.5em;
+    font-weight: bold;
+    margin-left: 0.25em;
+    text-align: left;
+    color: #0DB2EF;
+}
+
+span.tempCF{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    font-family: arial, helvetica;
+    font-size: 4.5em;
+    font-weight: bold;
+    margin-left: 0.25em;
+    text-align: left;
+    color: #0CD211;
+}
+
+div.bbarvs{
+    width: 96%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0.5em;
+}
+
+button.vms{
+    width: auto;
+    margin: 0.5em;
+    background: linear-gradient(to bottom, #1b2631 5%, #2C3E50 100%);
+    background-color: #1b2631;
+    border-radius: 2px;
+    border:1px solid #D6BCD6;
+    cursor: pointer;
+    color: #F7F2E0;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 0.75em;
+    font-weight: normal;
+    padding: 2px 8px;
+    text-decoration: none;
+    text-shadow: 0px 1px 0px white;
+}
+
+button.vms:hover {
+    background:linear-gradient(to bottom, #2d4052 25%, #2C3E50 100%);
+    background-color: #1b2631;
+}
+
+button.vms:active {
+    position:relative;
+    top: 1px;
+}
+
+p.copyrightprivacy{	
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif, arial, verdana;
+    font-size: 0.50em;
+    font-weight: normal;
+    margin: 0.25em;
+    padding: 0.25em;	
+    height: 1.0em;
+    color: darkslategrey;   
+}
+
+a.crpy:link, a.crpy:visited{
+    color: darkslategrey;
+    text-decoration: none;
+}
+
+a.crpy:hover{
+    color: #DD1111;
+    text-decoration: none;
+}
