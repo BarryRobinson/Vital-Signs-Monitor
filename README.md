@@ -22,5 +22,5 @@ Trying to use screen sharing with our existing screen-based vitals monitors didn
 This is now fully functional and ready for beta testing. Tested on Firefox, Chrome, Safari, and Edge. I plan to finish the ECG display, which is currently disabled, as time permits.
 
 To run these files on your own server:
-Upload: saVSMonitor.html, saVSControlWindow.html, saVSControlStyle.css, saVSMonitorStyle.css, pump.mp3
-Place the .html and .css files in your directory with all of your other .html files. Create a new directory in this directory named Sounds (unless you already have a directory with that name). Put pump.mp3 into the Sounds directory. You are finished.
+Download these files from GitHub: saVSMonitor.html, saVSControlWindow.html, saVSControlStyle.css, saVSMonitorStyle.css, pump.mp3
+Place the .html and .css files in your directory with all of your other .html files. Create a new directory in this directory named Sounds (unless you already have a directory with that name). Put pump.mp3 into the Sounds directory.
