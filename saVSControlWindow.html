@@ -21,7 +21,9 @@ function initialize() {
        peer.on('open', function (id) {
            if (peer.id === null) peer.id = lastPeerId;
            else lastPeerId = peer.id;
-           update('<br/>\n<strong>Your ID: ' + peer.id + '</strong><br/>\n<br/>\n');
+           update('<br/>\nCopy the following URL and send to your learner:<br/>\n<br/>\n');
+           update('<strong>' + window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1) +
+                  'saVSMonitor.html?id=' + peer.id + '</strong><br/>\n<br/>\n');
            isconnect.innerHTML = "Awaiting connection...";
        });
 

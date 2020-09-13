@@ -10,7 +10,6 @@ const intstamp = Date.now();
 var bpSound;
 var lastPeerId = null;
 var peer   = null;
-var peerId = null;
 var conn   = null;
 
 var ecgn     =  false;
@@ -81,22 +80,25 @@ function initialize() {
 }
 
 function conectToPeer(){
-  var peerid = prompt("Enter the peer ID\nyou have been given\nto connect with the server:");
-  if (peerid == null || peerid == "") {isconnect.innerHTML = "Nothing entered, try again";}
-  else {
-       var pid = peerid.trim();
+      var pid = getUrlParam("id");
+      if (pid == null || pid == "") {
+         isconnect.innerHTML = "running in stand-alone mode";
+         return;
+      }
        isconnect.innerHTML = "connecting with " + pid;
        if (conn) {conn.close();}
-       conn = peer.connect(pid, { reliable: true });
+
+         conn = peer.connect(pid, { reliable: true });
+
        conn.on('open', function () {
            isconnect.innerHTML = "Connected to: " + conn.peer;
-           var command = getUrlParam("command");
-           if (command) conn.send(command);
-           if (conn && conn.open) conn.send('clock=' + intstamp);
+           if (conn && conn.open){
+                conn.send('clock=' + intstamp);
+                hideLoginBox();
+           }
        });
        conn.on('data', function (data) { processVitals(data);});
        conn.on('close', function () { isconnect.innerHTML = "Connection closed";});
-  }
 }
 
 function getUrlParam(name){
@@ -108,24 +110,25 @@ function getUrlParam(name){
       else return results[1];
 }
 
+function hideLoginBox(){
+        var ids = ['log1', 'log2', 'log3'];
+        var indx;
+        for (indx = 0; indx < ids.length; indx++){
+           document.getElementById(ids[indx]).style.display = 'none';
+           document.getElementById(ids[indx]).style.zIndex = '0';
+        }
+}
+
 function setECG(){
-     if (arguments.length == 1){
+     if (arguments.length > 0){
         if (arguments[0] === true || arguments[0] === 'true') showECG();
         else hideECG();
         ecgSig   = 'nsr';
         ecgSig2  = 'nsr';
         ecgTrend = 0;
      }
-     if (arguments.length == 2){
-        if (arguments[0] === true || arguments[0] === 'true') showECG();
-        else hideECG();
-        ecgSig   = arguments[1];
-        ecgSig2  = 'nsr';
-        ecgTrend = 0;
-     }
+     if (arguments.length == 2) ecgSig   = arguments[1];       
      if (arguments.length == 4){
-         if (arguments[0] === true || arguments[0] === 'true') showECG();
-        else hideECG();
         ecgSig   = arguments[1];
         ecgSig2  = arguments[2];
         ecgTrend = arguments[3];
@@ -152,7 +155,7 @@ function setBloodPressure(){
 }
 
 function setTemperature(){
-     if (arguments.length == 2){
+     if (arguments.length > 1){
           checkCF(  arguments[0]);
           celsius = arguments[0];
           temper  = arguments[1];
@@ -161,9 +164,6 @@ function setTemperature(){
           tpTrend = 0;
      }
      if (arguments.length == 5){
-          checkCF(  arguments[0]);
-          celsius = arguments[0];
-          temper  = arguments[1];
           temper2 = arguments[2];
           tpDelay = arguments[3];
           tpTrend = arguments[4];
@@ -534,6 +534,7 @@ function playSound(audio){
 </head><body onload="
    bpSound = loadSound('./Sounds/pump.mp3');
    initialize();
+   setTimeout(function(){conectToPeer(); }, 5000);
    // use the functions below to set initial conditions
    setECG(false);
    setBloodPressure(120, 80);
@@ -541,9 +542,10 @@ function playSound(audio){
    setRespirationRate(16);
    setPulseOximetry(99);
    setHeartRate(72);">
+<div class="loginoverlay" id="log1"><div class="loginbox" id="log2"><h2 class="log" id="log3">Vital Signs Monitor<br/>connecting to<br/>simulation . . .</h2></div></div>
 <div class="general">
 <div class="butspacer"><span id="isconnect" class="isconnect">not connected</span>
-<button class="link" onclick="conectToPeer();">&#128279;</button></div>
+&#128279;</div>
 <h1 class="vs">Vital Signs Monitor</h1>
 <div class="row">
 <div id="divECG" class="ebox">ECG&#8201;<canvas id="ecgSig" class="ecg"></canvas></div>
