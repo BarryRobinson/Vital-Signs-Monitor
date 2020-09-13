@@ -1,0 +1,274 @@
+div.controlWindow{
+     width: 100%;
+     height: auto;
+     padding: 4px;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     background-color: #1b2631;
+}
+
+div.butspacer{
+     width: 100%;
+     height: auto;
+     display: flex;
+     flex-direction: row;
+     justify-content: flex-end;
+     align-items: center;
+}
+
+span.isconnect{
+     width: auto;
+     height: auto;
+     font-family: ui-monospace, arial;
+     font-size: 12px;
+     font-weight: bold;
+     margin-left: 8px;
+     text-align: right;     
+     color: grey;
+}
+
+div.titlerow{
+     width: 36em;
+     height: auto;
+     display: flex;
+     flex-direction: row;
+     padding-bottom: 8px;
+}
+
+h1.vs{
+     font-family: arial, helvetica, sans-serif, verdana;
+     font-size: 2.0em;
+     font-weight: bold;        
+     margin-left: 4px;
+     margin-right: 4px
+     padding: 0px 0px 0px 0px;
+     text-align: center;
+     color: #F7F2E0;
+}
+
+.responseHolder {      
+     width: 36em;
+     height: 100px;
+     font-family: arial, helvetica, sans-serif, verdana;
+     font-size: 18px;
+     padding: 4px;
+     margin: 12px;
+     overflow: auto;
+     color: black;
+     background-color: white;
+     border: 2px solid darkolivegreen;
+}
+
+button.sac{
+     width: auto;
+     margin: 1px;
+     background: linear-gradient(to bottom, #1b2631 5%, #2C3E50 100%);
+     background-color: #1b2631;
+     border-radius: 2px;
+     border:1px solid #D6BCD6;
+     cursor: pointer;
+     color: #F7F2E0;
+     font-family: arial, helvetica, sans-serif, verdana;
+     font-size: 18px;
+     font-weight: normal;
+     padding: 2px 8px;
+     text-decoration: none;
+     text-shadow: 0px 1px 0px white;
+}
+
+button.sac:hover {
+     background:linear-gradient(to bottom, #2d4052 25%, #2C3E50 100%);
+     background-color: #1b2631;
+}
+
+button.sac:active {
+     position:relative;
+     top:1px;
+}
+
+.comment{
+     font-family: arial, helvetica, sans-serif, verdana;
+     font-size: 1em;
+     font-weight: normal;	
+     text-align: left;
+     padding: 2px;
+     margin: 4px 20px 4px 20px;
+     color: #444466;
+     border: 2px solid darkolivegreen;
+}
+
+div.labrow {
+    width: 36em;
+    height: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 4px;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: #F7F2E0;
+}
+
+div.trow1 {
+    width: 36em;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 4px;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: black;
+    background-color: #C3FB78;
+}
+
+div.crow{
+    width: 14em;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+select.ecg{
+    width: 6em;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    margin: 4px;
+}
+
+div.trow2 {
+    width: 36em;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 4px;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: black;
+    background-color: red;
+}
+
+div.trow3 {
+    width: 36em;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 4px;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: black;
+    background-color: yellow;
+}
+
+div.trow4 {
+    width: 36em;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 4px;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: black;
+    background-color: #0CD211;
+}
+
+div.trow5 {
+    width: 36em;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding: 4px;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: black;
+    background-color: #0DB2EF;
+}
+
+div.buttrow {
+    width: 36em;
+    height: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: baseline;
+    padding: 1em;
+    margin: 4px;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    color: #F7F2E0;
+}
+    
+input[type=number].in3{
+    width: 3em;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    margin: 4px;
+}
+
+input[type=number].in4, input[type=text].in4 {
+    width: 4em;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    margin: 4px;
+}
+
+input[type=checkbox].chkb {
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    margin: 4px;
+    font-weight: bold;
+    text-align: left;
+}
+
+#lwidth{
+    width: 10em;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 18px;
+    margin: 4px;
+}
+
+p.copyrightprivacy{	
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif, arial, verdana;
+    font-size: 0.50em;
+    font-weight: normal;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-top: 5px;;
+    padding-bottom: 5px;	
+    height: 1.0em;
+    color: darkslategrey;   
+}
+
+a.crpy:link, a.crpy:visited{
+    color: darkslategrey;
+    text-decoration: none;
+}
+
+a.crpy:hover{
+    color: #DD1111;
+    text-decoration: none;
+}
