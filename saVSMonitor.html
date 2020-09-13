@@ -376,6 +376,7 @@ function dispBP(target1, target2, target3){
       wrkg = true;
       var upper = sysT + 10;
       var lower = diaS - 10;
+      if (lower < 4) lower = 4;
       target1.innerHTML = "&#8259;&#8259;&#8259;&#8259;&#8201;&#8725;";
       target2.innerHTML = "&#8202;&#8259;&#8259;&#8259;&#8259;";
       target3.innerHTML = "&#8259;&#8259;&#8259;&#8259;"
