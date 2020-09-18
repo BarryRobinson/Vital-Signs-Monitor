@@ -83,6 +83,7 @@ function conectToPeer(){
       var pid = getUrlParam("id");
       if (pid == null || pid == "") {
          isconnect.innerHTML = "running in stand-alone mode";
+         hideLoginBox();
          return;
       }
        isconnect.innerHTML = "connecting with " + pid;
@@ -230,6 +231,15 @@ function stepKeyValPairs(kvparry){
   for (var idx = 0; idx < kvparry.length; idx++){
           keyvalue = kvparry[idx].split('=');
     switch(keyvalue[0]){
+    case 'ptnm':
+           ptnm.innerHTML = 'Name: ' + keyvalue[1];
+         break;
+    case 'ptid':
+            ptid.innerHTML = 'ID: ' + keyvalue[1];
+         break;
+    case 'ptdb':
+            ptdb.innerHTML = 'DOB: ' + keyvalue[1];
+         break;
     case 'ecgn':
            if (keyvalue[1] === 'true' || keyvalue[1] === true) showECG();
            else hideECG();
@@ -470,6 +480,7 @@ function dispPO(target1, target2){
               if (poX < 80) poX = Math.round(poX + (Math.random() * 4.00) - 1.99);
               else poX = Math.round(poX + (Math.random() * 2.00) - 0.99);
               if (poX > 100) poX = 100;
+              if (poX < 0) poX = 0;
               count = 0;
           }
           htR = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
@@ -548,6 +559,9 @@ function playSound(audio){
 <div class="butspacer"><span id="isconnect" class="isconnect">not connected</span>
 &#128279;</div>
 <h1 class="vs">Vital Signs Monitor</h1>
+<div class="row"><div class="ptData">
+<span class="ptd" id="ptnm">Name:_____</span><span class="ptd" id="ptid">ID:_____</span><span class="ptd" id="ptdb">DOB:_____</span>
+</div></div>
 <div class="row">
 <div id="divECG" class="ebox">ECG&#8201;<canvas id="ecgSig" class="ecg"></canvas></div>
 </div>

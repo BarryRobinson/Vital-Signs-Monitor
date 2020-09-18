@@ -67,28 +67,6 @@ span.isconnect{
     color: grey;
 }
 
-button.link{
-    height: auto;
-    width: auto;
-    border: none;
-    cursor: pointer;
-    font-family: arial, helvetica, sans-serif, verdana;
-    font-size: 2.0em;
-    font-weight: bold;
-    color: grey;
-    background-color: #1b2631;
-    text-decoration: none;
-    text-shadow: none;
-}
-
-button.link:hover {
-    color: #1b2631;
-}
-
-button.link:active {
-    color: green;
-}
-
 h1.vs{
     font-family: arial, helvetica, sans-serif, verdana;
     font-size: 2.0em;
@@ -105,6 +83,28 @@ div.row{
     display: flex;
     flex-direction: row;
     justify-content: center;
+}
+
+div.ptData{
+    width: 95%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    padding: 0.1em;
+    margin: 2px;
+    border:2px solid #2D4052;
+    font-family: arial, helvetica, sans-serif, verdana;
+    font-size: 0.8em;
+    font-weight: bold;
+    color:  #09221A;
+    background-color: #46FAC4;
+}
+
+span.ptd{
+    padding: 0.25em;
 }
 
 div.ebox{
