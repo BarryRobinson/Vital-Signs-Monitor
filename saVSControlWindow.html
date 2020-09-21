@@ -14,7 +14,7 @@ var conn = null;
 var cels = true;
 var ecgn = false;
 var allChecked = false;
-var chboxes = ['ecg', 'sys', 'spo', 'pls', 'tmp', 'rsp'];
+var chboxes = ['ptz', 'ecg', 'sys', 'spo', 'pls', 'tmp', 'rsp'];
 
 function initialize() {
        peer = new Peer(null, { debug: 2 });
@@ -61,6 +61,10 @@ function ready() {
           let dnow = new Date(intstamp);
           update("<i>. . . Remote vital signs monitor opened on " + dnow.toDateString() +
                " at " + dnow.toTimeString() + " synchronized</i><br/>\n");
+          if (document.getElementById('autoupdate').checked){
+             update("Automatic update on load<br/>\n");
+             transmitVariables();
+          }
         }
         else update("<i> . . . at " + timeStamp() + " " + data + " . . .</i><br/>\n");
       });
@@ -93,9 +97,15 @@ function transmitVariables(){
         if (firstE) firstE = false;
            else transV += '&';
         switch(chboxes[idx]){
+        case 'ptz':
+           transV += 'pt01=' + getSelectedOption('ptv1') + ptn1.value + '&pt02=' + getSelectedOption('ptv2') +
+                     ptn2.value + '&pt03=' + getSelectedOption('ptv3') + ptn3.value;
+           setS += 'Patient Data: ' + getSelectedOption('ptv1') + ptn1.value + ', ' + getSelectedOption('ptv2') +
+                   ptn2.value + ', ' + getSelectedOption('ptv3') + ptn3.value + '<br/>\n';
+           break;
         case 'ecg':
-           transV += 'ecgn=' + ecgn + '&' + 'ecgs=' + getSelectedOption('ecgs') + '&' +
-                     'ecge=' + getSelectedOption('ecge') + '&' + 'ecgt=' + ecgt.value;
+           transV += 'ecgn=' + ecgn + '&ecgs=' + getSelectedOption('ecgs') + '&ecge=' +
+                      getSelectedOption('ecge') + '&ecgt=' + ecgt.value;
            var ecgState = 'Disabled';
            if (ecgn) ecgState = 'Enabled';
            if (ecgt.value > 0) setS += '&#8194;ECG: ' + ecgState + ' start with ' + getSelectedOption('ecgs') + ', end with ' +
@@ -190,6 +200,7 @@ function fileSelected(input){
 function processLoadText(text, fname){
    text = text.replace(/[\n\r]/g, "");
    text.trim();
+   text = decodeURI(text);
    var inarray = text.split('?');
     if (inarray.length != 2){
       update("Error loading: " + fname + " wrong number of \'?\' in file.<br/>\n");
@@ -202,8 +213,34 @@ function processLoadText(text, fname){
    for (ii = 0; ii < vparams.length; ii++){
         var kvpair = vparams[ii].split('=');
         switch(kvpair[0]){
+          case 'ptv1':
+                ptv1.value = kvpair[1];
+                document.getElementById('ptz').checked = true;
+          break;
+          case 'ptn1':
+                ptn1.value = kvpair[1];
+          break;
+          case 'ptv2':
+                ptv2.value = kvpair[1];
+          break;
+          case 'ptn2':
+                ptn2.value = kvpair[1];
+          break;
+          case 'ptv3':
+                ptv3.value = kvpair[1];
+          break;
+          case 'ptn3':
+                ptn3.value = kvpair[1];
+          break;
           case 'ecgn':
-
+                if (kvpair[1] == true || kvpair[1] == 'true'){
+                    ecgn = true;
+                    document.getElementById('ecgn').innerHTML = "&#8195;ECG enabled";
+                }
+                else{
+                    ecgn = false;
+                    document.getElementById('ecgn').innerHTML = "&#8195;ECG disabled";
+                }
           break;   
           case 'ecgs':
                 ecgs.value = kvpair[1];
@@ -339,10 +376,49 @@ function toggleCheckbox(){
 <div class="controlWindow">
 <div class="butspacer"><span id="isconnect" class="isconnect">not connected</span>&#8195;&#128279;</div>
 <div class="titlerow"><h1 class="vs">Vital Signs Monitor Control Window</h1></div>
+<div class="autorow">Automatic update on monitor load <input type="checkbox" id="autoupdate" class="chkb"></div>
 <div id="responseHolder" class="responseHolder"></div>
 <div class="titlerow"><button name="addcomment" id="addcomment" class="sac" onClick="comment(acommnt.value);">Add comment</button>
 <input type="text" name="acomment" class="comment" id="acommnt" size="50"/></div>
-<div class="labrow"><p id="lwidth">Select</p><p style="width: 7em; margin: 4px;">Start</p> <p style="width: 4em; margin: 4px;">End</p><p style="width: 4em; margin: 4px;">Trend</p></div>
+<div class="trow0"><div class="crow"><input type="checkbox" id="ptz" class="chkb"><label for="ptz">&#8195;Patient Data</label></div>
+<select id="ptv1" name="ptv1" class="ecg">
+<option value=" ">-blank-</option>
+<option value="Name: " selected>Name</option>
+<option value="ID: ">ID</option>
+<option value="DOB: ">DOB</option>
+<option value="Institution: ">Institution</option>
+<option value="Age: ">Age</option>
+<option value="Date: ">Date</option>
+<option value="Time: ">Time</option>
+</select>
+<input type="text" name="ptn1" class="ptb" id="ptn1" size="35"/>
+</div><div class="trow0">
+<select id="ptv2" name="ptv2" class="ecg">
+<option value=" ">-blank-</option>
+<option value="Name: ">Name</option>
+<option value="ID: " selected>ID</option>
+<option value="DOB: ">DOB</option>
+<option value="Institution: ">Institution</option>
+<option value="Age: ">Age</option>
+<option value="Date: ">Date</option>
+<option value="Time: ">Time</option>
+</select>
+<input type="text" name="ptn2" class="ptb" id="ptn2" size="35"/>
+</div><div class="trow0">
+<select id="ptv3" name="ptv3" class="ecg">
+<option value=" ">-blank-</option>
+<option value="Name: ">Name</option>
+<option value="ID: ">ID</option>
+<option value="DOB: " selected>DOB</option>
+<option value="Institution: ">Institution</option>
+<option value="Age: ">Age</option>
+<option value="Date: ">Date</option>
+<option value="Time: ">Time</option>
+</select>
+<input type="text" name="ptn3" class="ptb" id="ptn3" size="35"/>
+</div>
+
+<div class="labrow"><p id="lwidth">Select</p><p style="width: 7.5em; margin: 4px;">Start</p> <p style="width: 4em; margin: 4px;">End</p><p style="width: 4em; margin: 4px;">Trend</p></div>
 <div class="trow1"><div class="crow">&#8194;<input type="checkbox" id="ecg" class="chkb"><label id="ecgn" for="ecg">&#8195;ECG disabled</label></div>
 <select id="ecgs" name="ecgs" class="ecg">
 <option value="NSR" selected>NSR</option>

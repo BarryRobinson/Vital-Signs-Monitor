@@ -120,6 +120,21 @@ function hideLoginBox(){
         }
 }
 
+function setPatientData(){
+  if (arguments.length === 2){
+       pt1.innerHTML = arguments[0] + arguments[1];
+  }
+  if (arguments.length === 4){
+       pt1.innerHTML = arguments[0] + arguments[1];
+       pt2.innerHTML = arguments[2] + arguments[3];
+  }
+  if (arguments.length === 6){
+       pt1.innerHTML = arguments[0] + arguments[1];
+       pt2.innerHTML = arguments[2] + arguments[3];
+       pt3.innerHTML = arguments[4] + arguments[5];
+  }
+}
+
 function setECG(){
      if (arguments.length > 0){
         if (arguments[0] === true || arguments[0] === 'true') showECG();
@@ -231,14 +246,14 @@ function stepKeyValPairs(kvparry){
   for (var idx = 0; idx < kvparry.length; idx++){
           keyvalue = kvparry[idx].split('=');
     switch(keyvalue[0]){
-    case 'ptnm':
-           ptnm.innerHTML = 'Name: ' + keyvalue[1];
+    case 'pt01':
+            pt1.innerHTML = keyvalue[1];
          break;
-    case 'ptid':
-            ptid.innerHTML = 'ID: ' + keyvalue[1];
+    case 'pt02':
+            pt2.innerHTML = keyvalue[1];
          break;
-    case 'ptdb':
-            ptdb.innerHTML = 'DOB: ' + keyvalue[1];
+    case 'pt03':
+            pt3.innerHTML = keyvalue[1];
          break;
     case 'ecgn':
            if (keyvalue[1] === 'true' || keyvalue[1] === true) showECG();
@@ -560,7 +575,7 @@ function playSound(audio){
 &#128279;</div>
 <h1 class="vs">Vital Signs Monitor</h1>
 <div class="row"><div class="ptData">
-<span class="ptd" id="ptnm">Name:_____</span><span class="ptd" id="ptid">ID:_____</span><span class="ptd" id="ptdb">DOB:_____</span>
+<span class="ptd" id="pt1">&#8202;</span><span class="ptd" id="pt2"></span><span class="ptd" id="pt3"></span>&#8202;
 </div></div>
 <div class="row">
 <div id="divECG" class="ebox">ECG&#8201;<canvas id="ecgSig" class="ecg"></canvas></div>
