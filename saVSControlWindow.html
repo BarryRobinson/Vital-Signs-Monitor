@@ -64,6 +64,7 @@ function ready() {
           if (document.getElementById('autoupdate').checked){
              update("Automatic update on load<br/>\n");
              transmitVariables();
+             document.getElementById('autoupdate').checked = false;
           }
         }
         else update("<i> . . . at " + timeStamp() + " " + data + " . . .</i><br/>\n");
@@ -102,6 +103,7 @@ function transmitVariables(){
                      ptn2.value + '&pt03=' + getSelectedOption('ptv3') + ptn3.value;
            setS += 'Patient Data: ' + getSelectedOption('ptv1') + ptn1.value + ', ' + getSelectedOption('ptv2') +
                    ptn2.value + ', ' + getSelectedOption('ptv3') + ptn3.value + '<br/>\n';
+           document.getElementById('ptz').checked = false;
            break;
         case 'ecg':
            transV += 'ecgn=' + ecgn + '&ecgs=' + getSelectedOption('ecgs') + '&ecge=' +
@@ -198,7 +200,7 @@ function fileSelected(input){
 }
 
 function processLoadText(text, fname){
-   text = text.replace(/[\n\r]/g, "");
+   //text = text.replace(/[\n\r]/g, "");
    text.trim();
    text = decodeURI(text);
    var inarray = text.split('?');
@@ -246,11 +248,11 @@ function processLoadText(text, fname){
                 ecgs.value = kvpair[1];
                 document.getElementById('ecg').checked = true;
           break;
-          case 'egce':
-                egce.value = kvpair[1];
+          case 'ecge':
+                ecge.value = kvpair[1];
           break;
-          case 'egct':
-                egct.value = Number(kvpair[1]);
+          case 'ecgt':
+                ecgt.value = Number(kvpair[1]);
           break;
           case 'syss':
                 syss.value = Number(kvpair[1]);
@@ -360,7 +362,7 @@ function toggleCF(){
 }
 
 function toggleCheckbox(){
-     var indx = 0;
+     var indx = 1;
   if (allChecked){
      while (indx < chboxes.length) document.getElementById(chboxes[indx++]).checked = false;
      allChecked = false;
@@ -421,18 +423,18 @@ function toggleCheckbox(){
 <div class="labrow"><p id="lwidth">Select</p><p style="width: 7.5em; margin: 4px;">Start</p> <p style="width: 4em; margin: 4px;">End</p><p style="width: 4em; margin: 4px;">Trend</p></div>
 <div class="trow1"><div class="crow">&#8194;<input type="checkbox" id="ecg" class="chkb"><label id="ecgn" for="ecg">&#8195;ECG disabled</label></div>
 <select id="ecgs" name="ecgs" class="ecg">
-<option value="NSR" selected>NSR</option>
-<option value="VTach">VTach (pulseless)</option>
-<option value="VFib">VFib</option>
+<option value="NSR" selected>Normal Sinus Rhythm</option>
+<option value="VTach">V Tach (pulseless)</option>
+<option value="VFib">V Fib</option>
 <option value="Asystole">Asystole</option>
-<option value="AFib">AFib</option>
+<option value="AFib">A Fib</option>
 </select>
 <select id="ecge" name="ecge" class="ecg">
-<option value="NSR" selected>NSR</option>
-<option value="VTach">VTach (pulseless)</option>
-<option value="VFib">VFib</option>
+<option value="NSR" selected>Normal Sinus Rhythm</option>
+<option value="VTach">V Tach (pulseless)</option>
+<option value="VFib">V Fib</option>
 <option value="Asystole">Asystole</option>
-<option value="AFib">AFib</option>
+<option value="AFib">A Fib</option>
 </select>
 <input id="ecgt" type="number" class="in4" step="1" min="0" value="0">
 </div><div class="labrow"><p id="lwidth">Select</p><p style="width: 4em; margin: 4px;">Start</p> <p style="width: 3em; margin: 4px;">End</p><p style="width: 4em; margin: 4px;">Delay</p><p style="width: 4em; margin: 4px;">Trend</p></div>
