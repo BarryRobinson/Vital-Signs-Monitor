@@ -28,6 +28,7 @@ var oximet  = 99;
 var oximet2 = 0;
 var oxDelay = 0;
 var oxTrend = 0;
+var poxMin = 33; // minimum value in SPO2 required for reading, otherwise low
 
 var heartr  = 72;
 var heartr2 = 0;
@@ -49,7 +50,6 @@ var poON    = false;
 var wrkg    = false;
 var notSent = true;
 var toggle  = true;
-var count   = 0;
 
 function initialize() {
       peer = new Peer(null, { debug: 2 });
@@ -87,6 +87,9 @@ function conectToPeer(){
          return;
       }
        isconnect.innerHTML = "connecting with " + pid;
+
+      setTimeout(function(){
+
        if (conn) {conn.close();}
 
          conn = peer.connect(pid, { reliable: true });
@@ -100,6 +103,8 @@ function conectToPeer(){
        });
        conn.on('data', function (data) { processVitals(data);});
        conn.on('close', function () { isconnect.innerHTML = "Connection closed";});
+
+      }, 5000);
 }
 
 function getUrlParam(name){
@@ -392,7 +397,7 @@ function dispBP(target1, target2, target3){
      var diaS = Math.round(currentValue(diastl, diastl2, bpDelay, bpTrend));
      var timeInt = 533;
      var infMSec = 6000;
-     if(diaS >= sysT && !wrkg){
+     if(diaS > sysT && !wrkg){
       target1.innerHTML = 'Err';
       target2.innerHTML = 'Err';
       target3.innerHTML = 'Err';
@@ -439,15 +444,13 @@ function dispBP(target1, target2, target3){
 }
 
 function dispPO(target1, target2){
-  var poX = Math.round(currentValue(oximet, oximet2, oxDelay, oxTrend));
-      if (poX > 100) poX = 100;
+  var count   = 0;
+  var poX = 0;
   var htR = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
   if (!toggle) toggle = true;
   else toggle = false;
   if (!poON){
   poON = true;
-  target1.innerHTML = "&#8259;&#8259;&#8259;&#8259;";
-  target2.innerHTML = "&#8194;&#8194;&#8194;&#8194;";
   var pulse = Math.floor(8572/htR);
   var inter = Math.floor(htR * 7 / 5);
   var n = setInterval(function() {
@@ -483,22 +486,23 @@ function dispPO(target1, target2){
           inter--;
         }
         else{
-          target1.innerHTML = poX;
-          target2.innerHTML = htR;
-          if (notSent){
-                if (conn && conn.open) conn.send('Pulse oximeter probe SPO2: '
-                                  + poX + '%  Pulse: ' + htR);
-                notSent = false;
-          }
-          if (count++ > htR){
+          if (count++ > htR || notSent){
               poX = currentValue(oximet, oximet2, oxDelay, oxTrend);
               if (poX < 80) poX = Math.round(poX + (Math.random() * 4.00) - 1.99);
               else poX = Math.round(poX + (Math.random() * 2.00) - 0.99);
               if (poX > 100) poX = 100;
-              if (poX < 0) poX = 0;
+              if (poX < poxMin) target1.innerHTML="low";
+              else target1.innerHTML = poX;
               count = 0;
           }
-          htR = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
+          target2.innerHTML = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
+          if (notSent){
+              var poXx = poX;
+              if (poX < poxMin) poXx = "low";
+              if (conn && conn.open) conn.send('Pulse oximeter probe SPO2: '
+                                  + poXx + '%  Pulse: ' + htR);
+              notSent = false;
+          }
         }
         if (toggle){
            clearInterval(n);
@@ -561,7 +565,7 @@ function playSound(audio){
 </head><body onload="
    bpSound = loadSound('./Sounds/pump.mp3');
    initialize();
-   setTimeout(function(){conectToPeer(); }, 5000);
+   conectToPeer();
    // use the functions below to set initial conditions
    setECG(false);
    setPatientData('Name: ', 'John Smith', 'ID: ', '234-56789', 'DOB: ', 'July 23, 1964');
