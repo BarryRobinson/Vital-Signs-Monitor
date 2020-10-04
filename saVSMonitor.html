@@ -28,7 +28,7 @@ var oximet  = 99;
 var oximet2 = 0;
 var oxDelay = 0;
 var oxTrend = 0;
-var poxMin = 33; // minimum value in SPO2 required for reading, otherwise low
+var poxMin = 21; // minimum value in SPO2 required for reading, otherwise low
 
 var heartr  = 72;
 var heartr2 = 0;
@@ -141,98 +141,107 @@ function setPatientData(){
 }
 
 function setECG(){
-     if (arguments.length > 0){
+     if (arguments.length == 1){
         if (arguments[0] === true || arguments[0] === 'true') showECG();
         else hideECG();
         ecgSig   = 'nsr';
         ecgSig2  = 'nsr';
         ecgTrend = 0;
      }
-     if (arguments.length == 2) ecgSig   = arguments[1];       
+     if (arguments.length == 2){
+       if (arguments[0] === true || arguments[0] === 'true') showECG();
+       else hideECG();
+       ecgSig   = arguments[1];
+       ecgSig2  = 'nsr';
+       ecgTrend = 0;
+     }     
      if (arguments.length == 4){
+        if (arguments[0] === true || arguments[0] === 'true') showECG();
+        else hideECG();
         ecgSig   = arguments[1];
         ecgSig2  = arguments[2];
-        ecgTrend = arguments[3];
+        ecgTrend = (Number(arguments[3]) * 1000) + Date.now();
      }
 }
 
 function setBloodPressure(){
      if (arguments.length == 2){
-          systol  = arguments[0];
-          diastl  = arguments[1];
+          systol  = Number(arguments[0]);
+          diastl  = Number(arguments[1]);
           systol2 = 0;
           diastl2 = 0;
           bpDelay = 0;
           bpTrend = 0;
      }
      if (arguments.length == 6){
-          systol  = arguments[0];
-          diastl  = arguments[1];
-          systol2 = arguments[2];
-          diastl2 = arguments[3];
-          bpDelay = arguments[4];
-          bpTrend = arguments[5];
+          systol  =  Number(arguments[0]);
+          diastl  =  Number(arguments[1]);
+          systol2 =  Number(arguments[2]);
+          diastl2 =  Number(arguments[3]);
+          bpDelay = (Number(arguments[4]) * 1000) + Date.now();
+          bpTrend = (Number(arguments[5]) * 1000) + bpDelay;
      }        
 }
 
 function setTemperature(){
-     if (arguments.length > 1){
-          checkCF(  arguments[0]);
-          celsius = arguments[0];
-          temper  = arguments[1];
+     if (arguments.length == 2){
+          checkCF(arguments[0]);
+          temper  = Number(arguments[1]);
           temper2 = 0;
           tpDelay = 0;
           tpTrend = 0;
      }
      if (arguments.length == 5){
-          temper2 = arguments[2];
-          tpDelay = arguments[3];
-          tpTrend = arguments[4];
+          checkCF(arguments[0]);
+          temper  =  Number(arguments[1]);
+          temper2 =  Number(arguments[2]);
+          tpDelay = (Number(arguments[3]) * 1000) + Date.now();
+          tpTrend = (Number(arguments[4]) * 1000) + tpDelay;
      }
 }
 
 function setRespirationRate(){
      if (arguments.length == 1){
-          respir  = arguments[0];
+          respir  = Number(arguments[0]);
           respir2 = 0;
           rrDelay = 0;
           rrTrend = 0;
      }
      if (arguments.length == 4){
-          respir =  arguments[0];
-          respir2 = arguments[1];
-          rrDelay = arguments[2];
-          rrTrend = arguments[3];
+          respir =  Number(arguments[0]);
+          respir2 = Number(arguments[1]);
+          rrDelay = (Number(arguments[2]) * 1000) + Date.now();
+          rrTrend = (Number(arguments[3]) * 1000) + rrDelay;
      }
 }
 
 function setHeartRate(){
      if (arguments.length == 1){
-          heartr =  arguments[0]
+          heartr =  Number(arguments[0]);
           heartr2 = 0;
           hrDelay = 0;
           hrTrend = 0;
      }
      if (arguments.length == 4){
-          heartr =  arguments[0];
-          heartr2 = arguments[1];
-          hrDelay = arguments[2];
-          hrTrend = arguments[3];
+          heartr  =  Number(arguments[0]);
+          heartr2 =  Number(arguments[1]);
+          hrDelay = (Number(arguments[2]) * 1000) + Date.now();
+          hrTrend = (Number(arguments[3]) * 1000) + hrDelay;
      }        
 }
 
 function setPulseOximetry(){
      if (arguments.length == 1){
-          oximet =  arguments[0];
+          oximet =  Number(arguments[0]);
           oximet2 = 0;
           oxDelay = 0;
           oxTrend = 0;
      }
      if (arguments.length == 4){
-          oximet =  arguments[0];
-          oximet2 = arguments[1];
-          oxDelay = arguments[2];
-          oxTrend = arguments[3];
+          oximet  =  Number(arguments[0]);
+          oximet2 =  Number(arguments[1]);
+          oxDelay = (Number(arguments[2]) * 1000) + Date.now();
+          oxTrend = (Number(arguments[3]) * 1000) + oxDelay;
      }        
 }
 
@@ -444,8 +453,10 @@ function dispBP(target1, target2, target3){
 }
 
 function dispPO(target1, target2){
-  var count   = 0;
+  var count = 0;
   var poX = 0;
+  var poXr;
+  var poXp = 0;
   var htR = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
   if (!toggle) toggle = true;
   else toggle = false;
@@ -486,16 +497,21 @@ function dispPO(target1, target2){
           inter--;
         }
         else{
+          poX = Math.round(currentValue(oximet, oximet2, oxDelay, oxTrend));
+          target2.innerHTML = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
           if (count++ > htR || notSent){
-              poX = currentValue(oximet, oximet2, oxDelay, oxTrend);
-              if (poX < 80) poX = Math.round(poX + (Math.random() * 4.00) - 1.99);
-              else poX = Math.round(poX + (Math.random() * 2.00) - 0.99);
-              if (poX > 100) poX = 100;
-              if (poX < poxMin) target1.innerHTML="low";
-              else target1.innerHTML = poX;
+              poXr = poX;
+              if (poXr < 80) poXr = Math.round(poXr + (Math.random() * 4.00) - 1.99);
+              else poXr = Math.round(poXr + (Math.random() * 2.00) - 0.99);
+              if (poXr > 100) poXr = 100;
+              if (poXr < poxMin) target1.innerHTML="low";
+              else target1.innerHTML = poXr;
               count = 0;
           }
-          target2.innerHTML = Math.round(currentValue(heartr, heartr2, hrDelay, hrTrend));
+          else if (poX != poXp){
+              target1.innerHTML = poX;
+              poXp = poX;
+          }
           if (notSent){
               var poXx = poX;
               if (poX < poxMin) poXx = "low";
