@@ -509,7 +509,8 @@ function dispPO(target1, target2){
               count = 0;
           }
           else if (poX != poXp){
-              target1.innerHTML = poX;
+              if (poX < poxMin) target1.innerHTML="low";
+              else target1.innerHTML = poX;
               poXp = poX;
           }
           if (notSent){
