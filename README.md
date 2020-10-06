@@ -1,4 +1,6 @@
 # Vital-Signs-Monitor
+Updated files on October 6, 2020. Fixed several minor problems.
+
 A virtual Vital Signs Monitor that runs in a web browser and can be controlled remotely via a peer-to-peer connection.
 
 Trying to use screen sharing with our existing screen-based vitals monitors didn’t seem to work very well. I have developed a web-based, virtual Vitals Monitor for simulations with SPs/mannequins that use web conferencing software (Microsoft Teams, Zoom, Blackboard Collaborate). Try it out and let me know what you think.
