@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html><head><title>Vitals Monitor Control Window</title>
+<html><head><title>Control Window</title>
 <meta http-equiv="imagetoolbar" content="no"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
@@ -7,10 +7,13 @@
 <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
 <script>
 var intstamp = Date.now();
+
 var lastPeerId = null;
 var peer = null;
 var peerId = null;
-var conn = null;
+var mconn = null;
+var sconn = null;
+
 var cels = true;
 var ecgn = false;
 var allChecked = false;
@@ -21,23 +24,27 @@ function initialize() {
        peer.on('open', function (id) {
            if (peer.id === null) peer.id = lastPeerId;
            else lastPeerId = peer.id;
-           update('<br/>\nCopy the following URL and send to your learner:<br/>\n<br/>\n');
+           update('<br/>\nCopy the following URL and send to your learner:<br/>\n');
            update('<strong>' + window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1) +
                   'saVSMonitor.html?id=' + peer.id + '</strong><br/>\n<br/>\n');
+           update('Copy the following URL and send to the simulationist as required:<br/>\n');
+           update('<strong>' + window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1) +
+                  'saVSSimulationist.html?id=' + peer.id + '</strong><br/>\n<br/>\n');
            isconnect.innerHTML = "Awaiting connection...";
        });
 
        peer.on('connection', function (c) {
-           if (conn && conn.open) {
-              c.on('open', function() {
-                c.send("Already connected to another client");
-                setTimeout(function() { c.close(); }, 500);
-              });
-              return;
+
+           c.on('data', function (data) {
+           if (data.startsWith('clock')){
+              mconn = c;
+              mready();
            }
-           conn = c;
-           isconnect.innerHTML = "Connected to Vitals Monitor";
-           ready();
+           else if (data.startsWith('sconn')){
+              sconn = c;
+              sready();
+           }
+           });
        });
 
        peer.on('disconnected', function () {
@@ -48,33 +55,50 @@ function initialize() {
        });
 
       peer.on('close', function() {
-         conn = null;
-         isconnect.innerHTML = "Connection destroyed. Please refresh";
+         c = null;
+         isconnect.innerHTML = 'Connection destroyed. Please refresh';
       });
       peer.on('error', function (err) { isconnect.innerHTML = '' + err;});
 }
 
-function ready() {
-      conn.on('data', function (data) {
-        if (data.startsWith('clock')){
-          intstamp = Date.now();
-          let dnow = new Date(intstamp);
-          update("<i>. . . Remote vital signs monitor opened on " + dnow.toDateString() +
-               " at " + dnow.toTimeString() + " synchronized</i><br/>\n");
-          if (document.getElementById('autoupdate').checked){
-             update("Automatic update on load<br/>\n");
-             transmitVariables();
-             document.getElementById('autoupdate').checked = false;
-          }
-        }
-        else update("<i> . . . at " + timeStamp() + " " + data + " . . .</i><br/>\n");
-      });
-      conn.on('close', function () {
-         status.innerHTML = "Connection reset<br>Awaiting connection...";
-         conn = null;
+function mready() {
+      intstamp = Date.now();
+      if (sconn && sconn.open) sconn.send('clock=0');
+      let dnow = new Date(intstamp);
+      update('<i> . . . Remote vital signs monitor (ID:' + mconn.peer + ') opened on ' +
+              dnow.toDateString() + ' at ' + dnow.toTimeString() +
+             ' synchronized</i><br/>\n<br/>\n');
+      if (sconn) isconnect.innerHTML = 'Connected to ' + mconn.peer + ' and ' + sconn.peer;
+      else isconnect.innerHTML = 'Connected to ' + mconn.peer;
+      if (document.getElementById('autoupdate').checked){
+         update("Automatic update on load<br/>\n");
+         transmitVariables();
+         document.getElementById('autoupdate').checked = false;
+      }
+      mconn.on('data', function (data) {update('<i> . . . ' + timeStamp() + ' ' +
+                data + '</i><br/>\n');});
+      mconn.on('close', function () {
+        status.innerHTML = "Connection reset<br>Awaiting connection...";
+        mconn = null;
       });
 }
-         
+
+function sready() {
+      let tcorrf = Date.now() - intstamp;
+      let dnow = new Date(intstamp);
+      if (sconn && sconn.open) sconn.send('clock=' + tcorrf);
+      if (mconn) isconnect.innerHTML = "Connected to " + mconn.peer + " and " + sconn.peer;
+      else isconnect.innerHTML = "Connected to " + sconn.peer;
+      if (sconn && sconn.open) sconn.send(responseHolder.innerHTML);
+      update("<i>. . . Remote simulationist window (ID:" + sconn.peer + ") opened on " +
+               dnow.toDateString() + " at " + dnow.toTimeString() +
+              " synchronized</i><br/>\n<br/>\n");
+      sconn.on('close', function () {
+       status.innerHTML = "Connection reset<br>Awaiting connection...";
+       sconn = null;
+      });
+}
+
 function controlWindowOpened(){
    if (intstamp > 0){
       let dnow = new Date(intstamp);
@@ -157,14 +181,23 @@ function transmitVariables(){
    }
  }
   if (transV.length > 6){
-     update('Update vitals at ' + timeStamp() + ' . . .<br/>\n' + setS + '. . . end vitals update<br/>\n');
      transV = encodeURI(transV);
-     if (conn && conn.open) conn.send(transV);
+     if (mconn && mconn.open){
+         mconn.send(transV);
+         update('Update vitals at ' + timeStamp() + ' . . .<br/>\n' + setS + '. . . end vitals update<br/>\n');
+     }
+     else update('Monitor not open, vitals not sent.<br/>\n');
+   
   }
 }
 
-function comment(text){
-      update("Comment: at " + timeStamp() + " " + text + "<br/>\n");
+function strig(){
+    if(event.key === 'Enter') comment();
+}
+
+function comment(){
+      update("Control comment at " + timeStamp() + ": " + acommnt.value + "<br/>\n");
+      acommnt.value = '';
 }
 
 function timeStamp(){
@@ -180,8 +213,14 @@ function timeStamp(){
 }
 
 function update(text){
-	var chatLog = responseHolder.innerHTML;
-	responseHolder.innerHTML = chatLog + text;
+	responseHolder.innerHTML = responseHolder.innerHTML + text;
+        if (sconn && sconn.open) sconn.send(text);
+        scrollDiv = document.getElementById("responseHolder");
+	scrollDiv.scrollTop = scrollDiv.scrollHeight;
+}
+
+function update2(text){
+	responseHolder.innerHTML = responseHolder.innerHTML + text;
         scrollDiv = document.getElementById("responseHolder");
 	scrollDiv.scrollTop = scrollDiv.scrollHeight;
 }
@@ -200,7 +239,6 @@ function fileSelected(input){
 }
 
 function processLoadText(text, fname){
-   //text = text.replace(/[\n\r]/g, "");
    text.trim();
    text = decodeURI(text);
    var inarray = text.split('?');
@@ -362,7 +400,8 @@ function toggleCF(){
 }
 
 function toggleCheckbox(){
-     var indx = 1;
+     let indx = 1;
+     if (!ecgn) indx = 2;
   if (allChecked){
      while (indx < chboxes.length) document.getElementById(chboxes[indx++]).checked = false;
      allChecked = false;
@@ -380,8 +419,8 @@ function toggleCheckbox(){
 <div class="titlerow"><h1 class="vs">Vital Signs Monitor Control Window</h1></div>
 <div class="autorow">Automatic update on monitor load <input type="checkbox" id="autoupdate" class="chkb"></div>
 <div id="responseHolder" class="responseHolder"></div>
-<div class="titlerow"><button name="addcomment" id="addcomment" class="sac" onClick="comment(acommnt.value);">Add comment</button>
-<input type="text" name="acomment" class="comment" id="acommnt" size="50"/></div>
+<div class="titlerow"><button name="addcomment" id="addcomment" class="sac" onClick="comment();">Add comment</button>
+<input type="text" name="acomment" class="comment" id="acommnt" size="50" onkeydown="strig();"/></div>
 <div class="trow0"><div class="crow"><input type="checkbox" id="ptz" class="chkb"><label for="ptz">&#8195;Patient Data</label></div>
 <select id="ptv1" name="ptv1" class="ecg">
 <option value=" ">-blank-</option>

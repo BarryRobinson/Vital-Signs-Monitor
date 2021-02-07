@@ -2,7 +2,7 @@
 <html><head><title>Vital Signs Monitor</title>
 <meta http-equiv="imagetoolbar" content="no"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
 <link href="saVSMonitorStyle.css" rel="stylesheet" type="text/css"/>
 <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
 <script>
@@ -51,9 +51,9 @@ var wrkg    = false;
 var notSent = true;
 var toggle  = true;
 
-function initialize() {
+function initialize(){
       peer = new Peer(null, { debug: 2 });
-          peer.on('open', function (id) {
+      peer.on('open', function (id) {
           if (peer.id === null) peer.id = lastPeerId;
           else lastPeerId = peer.id;                 
        });
@@ -89,21 +89,18 @@ function conectToPeer(){
        isconnect.innerHTML = "connecting with " + pid;
 
       setTimeout(function(){
-
-       if (conn) {conn.close();}
-
-         conn = peer.connect(pid, { reliable: true });
+          if (conn) conn.close();
+          conn = peer.connect(pid, { reliable: true });
 
        conn.on('open', function () {
-           isconnect.innerHTML = "Connected to: " + conn.peer;
+           isconnect.innerHTML = "Connected to " + conn.peer;
            if (conn && conn.open){
-                conn.send('clock=' + intstamp);
                 hideLoginBox();
+                conn.send('clock=' + intstamp);
            }
        });
        conn.on('data', function (data) { processVitals(data);});
        conn.on('close', function () { isconnect.innerHTML = "Connection closed";});
-
       }, 5000);
 }
 
@@ -117,8 +114,8 @@ function getUrlParam(name){
 }
 
 function hideLoginBox(){
-        var ids = ['log1', 'log2', 'log3'];
-        var indx;
+        let ids = ['log1', 'log2', 'log3'];
+        let indx;
         for (indx = 0; indx < ids.length; indx++){
            document.getElementById(ids[indx]).style.display = 'none';
            document.getElementById(ids[indx]).style.zIndex = '0';
@@ -302,7 +299,10 @@ function stepKeyValPairs(kvparry){
          break;
     case 'spos':
            oximet   = Number(keyvalue[1]);
-           notSent  = true;
+           if (poON && conn && conn.open){
+                conn.send('Pulse oximeter probe still applied SPO2: ' + oximet + '%');
+                notSent = false;
+           }
          break;
     case 'spoe':
            oximet2  = Number(keyvalue[1]);
@@ -315,7 +315,10 @@ function stepKeyValPairs(kvparry){
          break;
     case 'plss':
            heartr   = Number(keyvalue[1]);
-           notSent  = true;
+           if (poON && conn && conn.open){
+                conn.send('Pulse oximeter probe still applied Pulse: ' + heartr);
+                notSent = false;
+           }
          break;
     case 'plse':
            heartr2  = Number(keyvalue[1]);
@@ -516,7 +519,7 @@ function dispPO(target1, target2){
           if (notSent){
               var poXx = poX;
               if (poX < poxMin) poXx = "low";
-              if (conn && conn.open) conn.send('Pulse oximeter probe SPO2: '
+              if (conn && conn.open) conn.send('Pulse oximeter probe applied SPO2: '
                                   + poXx + '%  Pulse: ' + htR);
               notSent = false;
           }

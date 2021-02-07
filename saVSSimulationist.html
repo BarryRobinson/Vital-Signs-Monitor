@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html><head><title>Simulationist Window</title>
+<meta http-equiv="imagetoolbar" content="no"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<link href="saVSSimulationistStyle.css" rel="stylesheet" type="text/css"/>
+<script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+<script>
+var intstamp = Date.now();
+var lastPeerId = null;
+var peer = null;
+var peerId = null;
+var conn = null;
+
+function initialize() {
+      peer = new Peer(null, { debug: 2 });
+          peer.on('open', function (id) {
+          if (peer.id === null) peer.id = lastPeerId;
+          else lastPeerId = peer.id;                 
+       });
+
+       peer.on('connection', function (c) {
+                 c.on('open', function() {
+                   c.send("Sender does not accept incoming connections");
+                   setTimeout(function() { c.close(); }, 500);
+                 });
+       });
+
+       peer.on('disconnected', function () {
+          isconnect.innerHTML = "Connection lost. Please reconnect";
+          peer.id = lastPeerId;
+          peer._lastServerId = lastPeerId;
+          peer.reconnect();
+       });
+
+      peer.on('close', function() {
+         conn = null;
+         isconnect.innerHTML = "Connection destroyed. Please refresh";
+      });
+      peer.on('error', function (err) { isconnect.innerHTML = '' + err;});
+}
+
+function conectToPeer(){
+      var pid = getUrlParam("id");
+      if (pid == null || pid == "") {
+         isconnect.innerHTML = 'NOT CONNECTED TO CONTROL WINDOW';
+         update('<p style=\"color:red\;\">This app cannot run by itself\;' +
+                ' it must be connected to the control window. ' +
+                'Close window now and wait for full url from control window</p>');      
+         return;
+      }
+       isconnect.innerHTML = "connecting with " + pid;
+       responseHolder.innerHTML = '<p style=\"color:red\;\">Wait while connection to ' +
+                                   pid + ' is made.</p>' ;
+    
+     setTimeout(function(){
+         if (conn) conn.close();
+         conn = peer.connect(pid, { reliable: true });
+
+       conn.on('open', function () {
+           isconnect.innerHTML = peer.id + " connected to " + conn.peer;
+           if (conn && conn.open){
+                responseHolder.innerHTML = ''; // blank display
+                conn.send('sconn=' + peer.id);
+            }
+       });
+       conn.on('data', function (data) {
+          if (data.startsWith('clock')){
+               let darray = data.split('=');              
+               intstamp = Date.now() - Number(darray[1]);
+          }
+          else update(data);});
+       conn.on('close', function () { isconnect.innerHTML = "Connection closed";});
+      }, 5000);
+}
+
+function getUrlParam(name){
+   name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+   var regexS = "[\\?&]" + name + "=([^&#]*)";
+   var regex = new RegExp(regexS);
+   var results = regex.exec(window.location.href);
+      if (results == null) return null;
+      else return results[1];
+}
+
+function strig() {
+    if(event.key === 'Enter') comment();
+}
+
+function comment(){
+      update("Simulationist comment at " + timeStamp() + ": " + acommnt.value + "<br/>\n");
+      acommnt.value = '';
+      
+}
+
+function timeStamp(){
+   var tmp = 0;
+     if (intstamp > 0){
+         var scs = Math.floor((Date.now() - intstamp)/1000);
+         var mns = Math.floor(scs/60);
+         scs = scs % 60;
+         tmp =  ((mns < 10) ? '0' : '') + mns;
+         tmp += ((scs < 10) ? ':0' : ':') + scs;
+     }
+   return tmp;
+}
+
+function update(text){
+	responseHolder.innerHTML = responseHolder.innerHTML + text;
+        scrollDiv = document.getElementById("responseHolder");
+	scrollDiv.scrollTop = scrollDiv.scrollHeight;
+}
+
+function openAttachment() {
+  document.getElementById('attachment').click();
+}
+
+</script>
+</head><body onload="initialize();
+                     conectToPeer();">
+<div class="controlWindow">
+<div class="butspacer"><span id="isconnect" class="isconnect">not connected</span>&#8195;&#128279;</div>
+<div class="titlerow"><h1 class="vs">Vital Signs Monitor Simulationist Window</h1></div>
+<div id="responseHolder" class="responseHolder"></div>
+<div class="titlerow"><button name="addcomment" id="addcomment" class="sac" onClick="comment();">
+Add comment</button>
+<input type="text" name="acomment" class="comment" id="acommnt" size="50" onkeydown="strig();"/>
+</div><!-- Copyright line -->
+<p class="copyrightprivacy"><a href="http://www.barrymrobinson.ca/" target="_blank" class="crpy">
+Copyright &copy;
+<script type="text/javascript"><!--
+today = new Date();
+year = today.getYear();
+if (year < 2000) year = year + 1900;
+document.write(year);
+//--></script>
+by Barry Robinson, Toronto, Ontario Canada</a></p>
+</div>
+</body></html>
