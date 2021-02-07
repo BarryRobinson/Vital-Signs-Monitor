@@ -1,4 +1,5 @@
 # Vital-Signs-Monitor
+Added Simulationist Window on February 7, 2021. Fixed several minor problems.
 Updated files on October 6, 2020. Fixed several minor problems.
 
 A virtual Vital Signs Monitor that runs in a web browser and can be controlled remotely via a peer-to-peer connection.
@@ -18,6 +19,8 @@ Trying to use screen sharing with our existing screen-based vitals monitors didn
 •	Vital signs monitor can be minimized or positioned where convenient on the learner’s screen. It can even be run on a separate device such as an iPad.
 
 •	Can use preprogrammed scenarios. The simulationist or the simulation operations specialist can preprogram sets of vitals in small text files that can be instantly sent to the monitor. The preprogrammed vitals can be tweaked, if necessary, before being sent. Start value, end value, delay and trend values can be loaded and sent.
+
+•	Simulationist window; mirrors control window. Time-stamped record of learner's actions. Aids in debriefing.
 
 •	Free. No charge.
 
